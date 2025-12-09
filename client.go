@@ -16,6 +16,7 @@ type Message struct {
 	Content    string     `json:"content,omitempty"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string     `json:"tool_call_id,omitempty"`
+	Reasoning  string     `json:"reasoning,omitempty"` // Some models (o1, deepseek) use this field
 }
 
 // ToolCall represents a function call from the model
@@ -68,14 +69,17 @@ func NewClient(cfg *Config) *Client {
 				Content: `You are a helpful assistant that answers questions about codebases.
 You have access to tools that let you explore the file system: ls, cat, head, grep, find, and tree.
 
-When answering questions:
-1. First explore the codebase structure using ls or tree
-2. Use find to locate specific files by name
-3. Use grep to search for patterns in code
-4. Use cat or head to read file contents
-5. Provide clear, concise answers based on what you find
+IMPORTANT: You MUST use the tool calling feature to invoke tools. Do NOT write JSON or function calls in your response text. Use the tool_calls mechanism provided by the API.
 
-Always use the tools to verify your answers - don't guess about code you haven't read.`,
+When answering questions:
+1. Use grep to search for specific patterns or keywords in code
+2. Use find to locate files by name pattern
+3. Use cat or head to read file contents
+4. Use ls or tree to explore directory structure
+5. After gathering information, provide a clear, concise answer
+
+Always use the tools to verify your answers - don't guess about code you haven't read.
+When you have enough information, respond with your final answer in plain text.`,
 			},
 		},
 	}
@@ -134,7 +138,12 @@ func (c *Client) Chat(userMessage string, onToolCall ToolCallback) (string, erro
 		}
 
 		// No more tool calls, return the final response
-		return assistantMsg.Content, nil
+		// Some reasoning models (o1, deepseek, etc.) put response in "reasoning" field
+		response := assistantMsg.Content
+		if response == "" && assistantMsg.Reasoning != "" {
+			response = assistantMsg.Reasoning
+		}
+		return response, nil
 	}
 }
 
@@ -148,6 +157,10 @@ func (c *Client) sendRequest() (*ChatResponse, error) {
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %v", err)
+	}
+
+	if debugMode {
+		fmt.Printf("[debug] Sending %d tools, %d messages\n", len(reqBody.Tools), len(reqBody.Messages))
 	}
 
 	url := strings.TrimSuffix(c.config.BaseURL, "/") + "/chat/completions"
@@ -172,6 +185,18 @@ func (c *Client) sendRequest() (*ChatResponse, error) {
 		return nil, fmt.Errorf("failed to read response: %v", err)
 	}
 
+	// Trim whitespace - some providers (OpenRouter) pad responses
+	body = bytes.TrimSpace(body)
+
+	// Check status code first (issue #3 from review)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	if debugMode {
+		fmt.Printf("[debug] Raw API response: %s\n", string(body))
+	}
+
 	var chatResp ChatResponse
 	if err := json.Unmarshal(body, &chatResp); err != nil {
 		return nil, fmt.Errorf("failed to parse response: %v\nBody: %s", err, string(body))
@@ -179,10 +204,6 @@ func (c *Client) sendRequest() (*ChatResponse, error) {
 
 	if chatResp.Error != nil {
 		return nil, fmt.Errorf("API error: %s", chatResp.Error.Message)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	return &chatResp, nil

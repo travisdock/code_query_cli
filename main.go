@@ -67,6 +67,7 @@ func main() {
 				fmt.Println("\nGoodbye!")
 				break
 			}
+			PrintError(fmt.Sprintf("readline error: %v", err))
 			break
 		}
 

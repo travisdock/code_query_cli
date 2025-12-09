@@ -270,7 +270,9 @@ func executeGrep(ctx context.Context, args map[string]interface{}) (string, erro
 	if recursive {
 		grepArgs = append(grepArgs, "-r")
 	}
-	grepArgs = append(grepArgs, pattern, path)
+	// Use "--" to separate options from pattern to prevent injection
+	// (e.g., pattern "-e malicious" being interpreted as a flag)
+	grepArgs = append(grepArgs, "--", pattern, path)
 
 	result, err := runCommand(ctx, "grep", grepArgs...)
 	if err != nil {
