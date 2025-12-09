@@ -140,6 +140,7 @@ var ToolDefinitions = []map[string]interface{}{
 func ExecuteTool(name string, argsJSON string) (string, error) {
 	var args map[string]interface{}
 	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
+		PrintError(fmt.Sprintf("Failed to parse tool arguments: %v", err))
 		return "", fmt.Errorf("invalid arguments: %v", err)
 	}
 
