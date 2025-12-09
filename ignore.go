@@ -67,13 +67,8 @@ func IsPathBlocked(path string) bool {
 		if matched, _ := filepath.Match(pattern, base); matched {
 			return true
 		}
-		// Check if pattern is contained in path (for patterns like "*secret*")
-		if strings.Contains(pattern, "*") {
-			if matched, _ := filepath.Match(pattern, base); matched {
-				return true
-			}
-		} else {
-			// Exact match or suffix match for non-glob patterns
+		// Exact match or suffix match for non-glob patterns
+		if !strings.Contains(pattern, "*") {
 			if base == pattern || strings.HasSuffix(path, "/"+pattern) {
 				return true
 			}
