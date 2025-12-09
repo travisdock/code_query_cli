@@ -151,6 +151,5 @@ Environment variables:
   OPENAI_BASE_URL   - API endpoint (default: https://api.openai.com/v1)
   CODEQUERY_MODEL   - Model to use (default: gpt-4o)
 
-Config file: ~/.config/codequery/config.json
-`)
+Config file: ~/.config/codequery/config.json`)
 }
