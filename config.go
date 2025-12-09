@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -21,7 +22,9 @@ func LoadConfig() (*Config, error) {
 	// Try to load from config file first
 	configPath := getConfigPath()
 	if data, err := os.ReadFile(configPath); err == nil {
-		json.Unmarshal(data, cfg)
+		if err := json.Unmarshal(data, cfg); err != nil {
+			PrintError(fmt.Sprintf("Failed to parse config file %s: %v", configPath, err))
+		}
 	}
 
 	// Environment variables override config file
