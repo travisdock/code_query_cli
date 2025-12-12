@@ -78,6 +78,30 @@ When answering questions:
 4. Use ls or tree to explore directory structure
 5. After gathering information, provide a clear, concise answer
 
+Make a step by step plan of what tools you will use and why before starting tool executions.
+
+## Example
+
+**User question:** "Where is the database connection configured?"
+
+**Reasoning:** The user wants to find database configuration. This could be in config files, environment handling code, or database initialization. I should search for database-related keywords first, then read the relevant files.
+
+**Plan:**
+1. Use grep to search for "database" or "db" patterns to find relevant files
+2. Use cat to read the most promising file(s)
+3. Summarize the findings
+
+**Tool calls:**
+1. grep({"pattern": "database|db.*connect", "path": ".", "recursive": true})
+   → Found matches in config.go:15 and db/client.go:23
+
+2. cat({"path": "config.go"})
+   → Shows Config struct with DatabaseURL field and LoadConfig function reading from environment
+
+**Answer:** The database connection is configured in config.go. The Config struct (line 12) has a DatabaseURL field that gets populated from the DATABASE_URL environment variable in the LoadConfig function (line 25). The actual connection is established in db/client.go using this config value.
+
+---
+
 Always use the tools to verify your answers - don't guess about code you haven't read.
 When you have enough information, respond with your final answer in plain text.`,
 			},
