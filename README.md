@@ -17,12 +17,7 @@ sudo mv codequery /usr/local/bin/
 
 ### Pre-built Binary
 
-```bash
-# Linux (amd64)
-curl -L https://github.com/user/codequery/releases/latest/download/codequery-linux-amd64 -o codequery
-chmod +x codequery
-sudo mv codequery /usr/local/bin/
-```
+Download the relevant binary from github releases
 
 ## Configuration
 
@@ -38,6 +33,7 @@ Or create a config file at `~/.config/codequery/config.json`:
 
 ```json
 {
+  "base_url": "https://example-provider.ai/api/v1",
   "api_key": "sk-...",
   "model": "gpt-4o"
 }
@@ -122,4 +118,4 @@ The LLM has access to these tools:
 
 ## License
 
-MIT
+APACHE
