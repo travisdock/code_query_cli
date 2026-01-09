@@ -407,8 +407,8 @@ func executeWriteMarkdown(ctx context.Context, args map[string]interface{}) (str
 }
 
 // formatMarkdown cleans up markdown content by:
-// - Normalizing line endings
-// - Removing excessive blank lines (max 2 consecutive)
+// - Normalizing line endings to \n
+// - Limiting consecutive blank lines to a maximum of 2
 // - Trimming trailing whitespace from lines
 // - Ensuring file ends with a single newline
 func formatMarkdown(content string) string {
@@ -427,7 +427,7 @@ func formatMarkdown(content string) string {
 		// Track consecutive blank lines
 		if trimmed == "" {
 			blankLineCount++
-			// Allow max 2 consecutive blank lines
+			// Limit consecutive blank lines to maximum of 2
 			if blankLineCount <= 2 {
 				formatted = append(formatted, "")
 			}
