@@ -23,7 +23,7 @@ func TestValidatePath_Safe(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validatePath(tt.path); err != nil {
+			if _, err := validatePath(tt.path); err != nil {
 				t.Errorf("validatePath(%q) = %v, want nil", tt.path, err)
 			}
 		})
@@ -44,7 +44,7 @@ func TestValidatePath_Traversal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validatePath(tt.path)
+			_, err := validatePath(tt.path)
 			if err == nil {
 				t.Errorf("validatePath(%q) = nil, want error", tt.path)
 			}

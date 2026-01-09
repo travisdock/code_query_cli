@@ -168,7 +168,7 @@ func ExecuteTool(name string, argsJSON string) (string, error) {
 
 	// Validate and sanitize paths
 	if path, ok := args["path"].(string); ok {
-		if err := validatePath(path); err != nil {
+		if _, err := validatePath(path); err != nil {
 			return "", err
 		}
 	}
@@ -196,18 +196,24 @@ func ExecuteTool(name string, argsJSON string) (string, error) {
 	}
 }
 
-func validatePath(path string) error {
+func validatePath(path string) (string, error) {
 	// Prevent path traversal
 	clean := filepath.Clean(path)
 	if strings.HasPrefix(clean, "..") || filepath.IsAbs(clean) {
 		// Allow absolute paths within cwd
-		cwd, _ := filepath.Abs(".")
-		abs, _ := filepath.Abs(clean)
+		cwd, err := filepath.Abs(".")
+		if err != nil {
+			return "", fmt.Errorf("failed to get current directory: %v", err)
+		}
+		abs, err := filepath.Abs(clean)
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve path: %v", err)
+		}
 		if !strings.HasPrefix(abs, cwd) {
-			return fmt.Errorf("path traversal not allowed: %s", path)
+			return "", fmt.Errorf("path traversal not allowed: %s", path)
 		}
 	}
-	return nil
+	return clean, nil
 }
 
 func getString(args map[string]interface{}, key, defaultVal string) string {
@@ -375,13 +381,13 @@ func executeWriteMarkdown(ctx context.Context, args map[string]interface{}) (str
 	// Format the markdown content to remove excessive whitespace
 	formattedContent := formatMarkdown(content)
 
-	// Validate path for security
-	if err := validatePath(path); err != nil {
+	// Validate path for security and get cleaned path
+	clean, err := validatePath(path)
+	if err != nil {
 		return "", err
 	}
 
 	// Check if file already exists
-	clean := filepath.Clean(path)
 	if _, err := os.Stat(clean); err == nil {
 		return "", fmt.Errorf("file already exists: %s", path)
 	}
