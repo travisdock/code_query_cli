@@ -89,6 +89,38 @@ function validates JWT tokens from the Authorization header...
 The login endpoint is at POST /api/login, defined in src/handlers/auth.go...
 ```
 
+### Creating Documentation
+
+You can ask the tool to create markdown documentation files:
+
+```
+> Review the authentication code and create a guide
+
+[tool] grep -r "auth" .
+[tool] cat src/auth/middleware.go
+[tool] cat src/handlers/auth.go
+[tool] write_markdown AUTH_GUIDE.md
+
+Created documentation file AUTH_GUIDE.md with authentication guide...
+```
+
+By default, files are created in the current directory. To create in a specific location:
+
+```
+> Create a README in the docs folder
+
+[tool] write_markdown docs/README.md
+
+Created documentation file docs/README.md...
+```
+
+The tool will:
+- Only create `.md` (markdown) files
+- Format the content properly (remove excessive whitespace)
+- Create files in current directory by default (preferred)
+- Only create files in existing directories
+- Prevent overwriting existing files
+
 ### Commands
 
 - `exit` / `quit` - Exit the program
@@ -115,6 +147,7 @@ The LLM has access to these tools:
 | `grep` | Search for patterns |
 | `find` | Find files by name |
 | `tree` | Show directory structure |
+| `write_markdown` | Create markdown documentation files |
 
 ## License
 

@@ -269,7 +269,7 @@ func TestChatResponse_WithError(t *testing.T) {
 
 func TestToolDefinitions_Structure(t *testing.T) {
 	// Verify all tools are defined
-	expectedTools := []string{"ls", "cat", "head", "grep", "find", "tree"}
+	expectedTools := []string{"ls", "cat", "head", "grep", "find", "tree", "write_markdown"}
 
 	if len(ToolDefinitions) != len(expectedTools) {
 		t.Errorf("ToolDefinitions length = %d, want %d", len(ToolDefinitions), len(expectedTools))
