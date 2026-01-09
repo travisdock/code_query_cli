@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -134,6 +135,27 @@ var ToolDefinitions = []map[string]interface{}{
 			},
 		},
 	},
+	{
+		"type": "function",
+		"function": map[string]interface{}{
+			"name":        "write_markdown",
+			"description": "Create a new markdown (.md) file with the provided content. Use this to create documentation, READMEs, or reports based on information gathered from the codebase.",
+			"parameters": map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"path": map[string]interface{}{
+						"type":        "string",
+						"description": "Path where the markdown file should be created (must end with .md)",
+					},
+					"content": map[string]interface{}{
+						"type":        "string",
+						"description": "The markdown content to write to the file",
+					},
+				},
+				"required": []string{"path", "content"},
+			},
+		},
+	},
 }
 
 // ExecuteTool runs a tool and returns its output
@@ -167,6 +189,8 @@ func ExecuteTool(name string, argsJSON string) (string, error) {
 		return executeFind(ctx, args)
 	case "tree":
 		return executeTree(ctx, args)
+	case "write_markdown":
+		return executeWriteMarkdown(ctx, args)
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
 	}
@@ -332,6 +356,88 @@ func executeTree(ctx context.Context, args map[string]interface{}) (string, erro
 	return result, nil
 }
 
+func executeWriteMarkdown(ctx context.Context, args map[string]interface{}) (string, error) {
+	path := getString(args, "path", "")
+	if path == "" {
+		return "", fmt.Errorf("path is required")
+	}
+
+	// Validate that the file ends with .md
+	if !strings.HasSuffix(strings.ToLower(path), ".md") {
+		return "", fmt.Errorf("only markdown files (.md) can be created")
+	}
+
+	content := getString(args, "content", "")
+	if content == "" {
+		return "", fmt.Errorf("content is required")
+	}
+
+	// Format the markdown content to remove excessive whitespace
+	formattedContent := formatMarkdown(content)
+
+	// Validate path for security
+	if err := validatePath(path); err != nil {
+		return "", err
+	}
+
+	// Check if file already exists
+	clean := filepath.Clean(path)
+	if _, err := os.Stat(clean); err == nil {
+		return "", fmt.Errorf("file already exists: %s", path)
+	}
+
+	// Create parent directories if needed
+	dir := filepath.Dir(clean)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create directory: %v", err)
+	}
+
+	// Write the file
+	if err := os.WriteFile(clean, []byte(formattedContent), 0644); err != nil {
+		return "", fmt.Errorf("failed to write file: %v", err)
+	}
+
+	return fmt.Sprintf("Successfully created markdown file: %s", path), nil
+}
+
+// formatMarkdown cleans up markdown content by:
+// - Normalizing line endings
+// - Removing excessive blank lines (max 2 consecutive)
+// - Trimming trailing whitespace from lines
+// - Ensuring file ends with a single newline
+func formatMarkdown(content string) string {
+	// Normalize line endings to \n
+	content = strings.ReplaceAll(content, "\r\n", "\n")
+	content = strings.ReplaceAll(content, "\r", "\n")
+
+	lines := strings.Split(content, "\n")
+	var formatted []string
+	blankLineCount := 0
+
+	for _, line := range lines {
+		// Trim trailing whitespace from each line
+		trimmed := strings.TrimRight(line, " \t")
+
+		// Track consecutive blank lines
+		if trimmed == "" {
+			blankLineCount++
+			// Allow max 2 consecutive blank lines
+			if blankLineCount <= 2 {
+				formatted = append(formatted, "")
+			}
+		} else {
+			blankLineCount = 0
+			formatted = append(formatted, trimmed)
+		}
+	}
+
+	// Join lines and ensure file ends with single newline
+	result := strings.Join(formatted, "\n")
+	result = strings.TrimRight(result, "\n") + "\n"
+
+	return result
+}
+
 // FormatToolCall returns a human-readable string for displaying a tool call
 func FormatToolCall(name string, argsJSON string) string {
 	var args map[string]interface{}
@@ -362,6 +468,9 @@ func FormatToolCall(name string, argsJSON string) string {
 		path := getString(args, "path", ".")
 		depth := getInt(args, "depth", 3)
 		return fmt.Sprintf("-L %d %s", depth, path)
+	case "write_markdown":
+		path := getString(args, "path", "")
+		return path
 	default:
 		return argsJSON
 	}

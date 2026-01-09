@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -361,5 +362,160 @@ func TestRunCommand_Timeout(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "timed out") {
 		t.Errorf("Error should indicate timeout, got: %v", err)
+	}
+}
+
+// Tests for write_markdown tool
+func TestExecuteTool_WriteMarkdown_Success(t *testing.T) {
+	testFile := "test_write_markdown.md"
+	defer os.Remove(testFile)
+
+	args := `{"path": "test_write_markdown.md", "content": "# Test\n\nContent"}`
+	result, err := ExecuteTool("write_markdown", args)
+	if err != nil {
+		t.Fatalf("ExecuteTool write_markdown error: %v", err)
+	}
+
+	if !strings.Contains(result, "Successfully created") {
+		t.Errorf("Expected success message, got: %s", result)
+	}
+
+	// Verify file was created
+	content, err := os.ReadFile(testFile)
+	if err != nil {
+		t.Fatalf("Failed to read created file: %v", err)
+	}
+
+	expected := "# Test\n\nContent\n"
+	if string(content) != expected {
+		t.Errorf("File content = %q, want %q", string(content), expected)
+	}
+}
+
+func TestExecuteTool_WriteMarkdown_WithSubdirectory(t *testing.T) {
+	testDir := "test_write_markdown_dir"
+	testFile := filepath.Join(testDir, "guide.md")
+	defer os.RemoveAll(testDir)
+
+	args := fmt.Sprintf(`{"path": "%s", "content": "# Guide\n\nSteps"}`, testFile)
+	result, err := ExecuteTool("write_markdown", args)
+	if err != nil {
+		t.Fatalf("ExecuteTool write_markdown error: %v", err)
+	}
+
+	if !strings.Contains(result, "Successfully created") {
+		t.Errorf("Expected success message, got: %s", result)
+	}
+
+	// Verify directory and file were created
+	if _, err := os.Stat(testFile); os.IsNotExist(err) {
+		t.Error("File should have been created")
+	}
+}
+
+func TestExecuteTool_WriteMarkdown_NonMarkdownExtension(t *testing.T) {
+	testFile := "test_write_markdown.txt"
+
+	args := fmt.Sprintf(`{"path": "%s", "content": "content"}`, testFile)
+	_, err := ExecuteTool("write_markdown", args)
+	if err == nil {
+		t.Error("write_markdown should reject non-.md files")
+	}
+	if !strings.Contains(err.Error(), "only markdown files") {
+		t.Errorf("Error should mention markdown restriction, got: %v", err)
+	}
+}
+
+func TestExecuteTool_WriteMarkdown_FileExists(t *testing.T) {
+	testFile := "test_write_markdown_exists.md"
+
+	// Create existing file
+	err := os.WriteFile(testFile, []byte("existing content"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+	defer os.Remove(testFile)
+
+	args := fmt.Sprintf(`{"path": "%s", "content": "new content"}`, testFile)
+	_, err = ExecuteTool("write_markdown", args)
+	if err == nil {
+		t.Error("write_markdown should reject overwriting existing files")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("Error should mention file exists, got: %v", err)
+	}
+}
+
+func TestExecuteTool_WriteMarkdown_MissingPath(t *testing.T) {
+	_, err := ExecuteTool("write_markdown", `{"content": "test"}`)
+	if err == nil {
+		t.Error("write_markdown without path should return error")
+	}
+}
+
+func TestExecuteTool_WriteMarkdown_MissingContent(t *testing.T) {
+	_, err := ExecuteTool("write_markdown", `{"path": "test.md"}`)
+	if err == nil {
+		t.Error("write_markdown without content should return error")
+	}
+}
+
+func TestExecuteTool_WriteMarkdown_PathTraversal(t *testing.T) {
+	_, err := ExecuteTool("write_markdown", `{"path": "../../../etc/test.md", "content": "malicious"}`)
+	if err == nil {
+		t.Error("write_markdown with path traversal should return error")
+	}
+}
+
+func TestFormatMarkdown_RemoveExcessiveBlankLines(t *testing.T) {
+	input := "# Title\n\n\n\n\nContent\n\n\n\nMore"
+	expected := "# Title\n\n\nContent\n\n\nMore\n"
+	result := formatMarkdown(input)
+	if result != expected {
+		t.Errorf("formatMarkdown() = %q, want %q", result, expected)
+	}
+}
+
+func TestFormatMarkdown_TrimTrailingSpaces(t *testing.T) {
+	input := "# Title   \n\nContent with spaces   \n"
+	expected := "# Title\n\nContent with spaces\n"
+	result := formatMarkdown(input)
+	if result != expected {
+		t.Errorf("formatMarkdown() = %q, want %q", result, expected)
+	}
+}
+
+func TestFormatMarkdown_NormalizeLineEndings(t *testing.T) {
+	input := "Title\r\nContent\rMore"
+	expected := "Title\nContent\nMore\n"
+	result := formatMarkdown(input)
+	if result != expected {
+		t.Errorf("formatMarkdown() = %q, want %q", result, expected)
+	}
+}
+
+func TestFormatMarkdown_EnsureSingleNewlineAtEnd(t *testing.T) {
+	input := "# Title\nContent"
+	expected := "# Title\nContent\n"
+	result := formatMarkdown(input)
+	if result != expected {
+		t.Errorf("formatMarkdown() = %q, want %q", result, expected)
+	}
+}
+
+func TestFormatMarkdown_RemoveMultipleNewlinesAtEnd(t *testing.T) {
+	input := "# Title\nContent\n\n\n\n"
+	expected := "# Title\nContent\n"
+	result := formatMarkdown(input)
+	if result != expected {
+		t.Errorf("formatMarkdown() = %q, want %q", result, expected)
+	}
+}
+
+func TestFormatToolCall_WriteMarkdown(t *testing.T) {
+	result := FormatToolCall("write_markdown", `{"path": "docs/README.md", "content": "test"}`)
+	expected := "docs/README.md"
+	if result != expected {
+		t.Errorf("FormatToolCall(write_markdown) = %q, want %q", result, expected)
 	}
 }
