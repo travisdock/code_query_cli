@@ -139,13 +139,13 @@ var ToolDefinitions = []map[string]interface{}{
 		"type": "function",
 		"function": map[string]interface{}{
 			"name":        "write_markdown",
-			"description": "Create a new markdown (.md) file with the provided content. Use this to create documentation, READMEs, or reports based on information gathered from the codebase.",
+			"description": "Create a new markdown (.md) file with the provided content. Use this to create documentation, READMEs, or reports based on information gathered from the codebase. The file must be in an existing directory.",
 			"parameters": map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
 					"path": map[string]interface{}{
 						"type":        "string",
-						"description": "Path where the markdown file should be created (must end with .md)",
+						"description": "Path where the markdown file should be created (must end with .md and be in an existing directory)",
 					},
 					"content": map[string]interface{}{
 						"type":        "string",
@@ -392,10 +392,10 @@ func executeWriteMarkdown(ctx context.Context, args map[string]interface{}) (str
 		return "", fmt.Errorf("file already exists: %s", path)
 	}
 
-	// Create parent directories if needed
+	// Check if parent directory exists
 	dir := filepath.Dir(clean)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create directory: %v", err)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return "", fmt.Errorf("directory does not exist: %s", dir)
 	}
 
 	// Write the file

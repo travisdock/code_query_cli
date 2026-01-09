@@ -15,7 +15,7 @@ Added a new `write_markdown` tool that allows the LLM to create markdown documen
 - ✅ Only allows creation of `.md` files (rejects other extensions)
 - ✅ Prevents overwriting existing files
 - ✅ Validates paths to prevent directory traversal attacks
-- ✅ Creates parent directories automatically if needed
+- ✅ Requires parent directory to exist (does not create directories)
 
 ### 3. Content Formatting
 The `formatMarkdown` function ensures proper formatting:
@@ -35,7 +35,7 @@ The `formatMarkdown` function ensures proper formatting:
 
 ### Unit Tests (13 new tests)
 1. `TestExecuteTool_WriteMarkdown_Success` - Basic file creation
-2. `TestExecuteTool_WriteMarkdown_WithSubdirectory` - Directory creation
+2. `TestExecuteTool_WriteMarkdown_DirectoryDoesNotExist` - Directory existence validation
 3. `TestExecuteTool_WriteMarkdown_NonMarkdownExtension` - Extension validation
 4. `TestExecuteTool_WriteMarkdown_FileExists` - Overwrite protection
 5. `TestExecuteTool_WriteMarkdown_MissingPath` - Parameter validation

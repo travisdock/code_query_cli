@@ -107,7 +107,7 @@ Created documentation file docs/AUTH_GUIDE.md with authentication guide...
 The tool will:
 - Only create `.md` (markdown) files
 - Format the content properly (remove excessive whitespace)
-- Create parent directories if needed
+- Only create files in existing directories
 - Prevent overwriting existing files
 
 ### Commands

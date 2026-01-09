@@ -392,24 +392,16 @@ func TestExecuteTool_WriteMarkdown_Success(t *testing.T) {
 	}
 }
 
-func TestExecuteTool_WriteMarkdown_WithSubdirectory(t *testing.T) {
-	testDir := "test_write_markdown_dir"
-	testFile := filepath.Join(testDir, "guide.md")
-	defer os.RemoveAll(testDir)
+func TestExecuteTool_WriteMarkdown_DirectoryDoesNotExist(t *testing.T) {
+	testFile := "nonexistent_dir/guide.md"
 
 	args := fmt.Sprintf(`{"path": "%s", "content": "# Guide\n\nSteps"}`, testFile)
-	result, err := ExecuteTool("write_markdown", args)
-	if err != nil {
-		t.Fatalf("ExecuteTool write_markdown error: %v", err)
+	_, err := ExecuteTool("write_markdown", args)
+	if err == nil {
+		t.Error("write_markdown should fail when directory doesn't exist")
 	}
-
-	if !strings.Contains(result, "Successfully created") {
-		t.Errorf("Expected success message, got: %s", result)
-	}
-
-	// Verify directory and file were created
-	if _, err := os.Stat(testFile); os.IsNotExist(err) {
-		t.Error("File should have been created")
+	if !strings.Contains(err.Error(), "directory does not exist") {
+		t.Errorf("Error should mention directory doesn't exist, got: %v", err)
 	}
 }
 

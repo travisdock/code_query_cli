@@ -23,13 +23,13 @@ Modified `validatePath` to return the cleaned path, which:
 1. **File Extension Validation**: Only `.md` files can be created
 2. **Path Traversal Prevention**: Paths are validated and cleaned
 3. **Overwrite Protection**: Existing files cannot be overwritten
-4. **Directory Creation**: Parent directories are created safely with appropriate permissions (0755)
+4. **Directory Existence**: Parent directory must exist (does not create directories)
 5. **File Permissions**: New files are created with 0644 permissions
 
 ### Test Coverage
 All 70+ tests pass, including 13 new tests specifically for the markdown feature:
-- File creation (basic and with subdirectories)
-- Extension validation
+- File creation (basic file in current directory)
+- Directory existence validation
 - Overwrite protection
 - Parameter validation
 - Security validation
