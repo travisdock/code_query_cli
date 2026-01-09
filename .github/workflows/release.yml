@@ -26,16 +26,18 @@ jobs:
 
       - name: Build binaries
         run: |
+          LDFLAGS="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}"
+
           # Linux
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/codequery-linux-amd64
-          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/codequery-linux-arm64
+          GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/codequery-linux-amd64
+          GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/codequery-linux-arm64
 
           # macOS
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/codequery-macos-amd64
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/codequery-macos-arm64
+          GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/codequery-macos-amd64
+          GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/codequery-macos-arm64
 
           # Windows
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/codequery-windows-amd64.exe
+          GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/codequery-windows-amd64.exe
 
       - name: Generate checksums
         run: |

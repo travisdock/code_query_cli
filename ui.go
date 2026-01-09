@@ -9,6 +9,8 @@ import (
 	"github.com/fatih/color"
 )
 
+var Version = "dev"
+
 var (
 	toolColor    = color.New(color.FgCyan, color.Faint)
 	errorColor   = color.New(color.FgRed)
@@ -41,7 +43,7 @@ func PrintError(msg string) {
 
 func PrintWelcome(model, baseURL string) {
 	fmt.Println()
-	successColor.Println("CodeQuery v0.1.0")
+	successColor.Printf("CodeQuery %s\n", Version)
 	dimColor.Printf("Model: %s | Provider: %s\n", model, baseURL)
 	fmt.Println()
 }
