@@ -139,13 +139,13 @@ var ToolDefinitions = []map[string]interface{}{
 		"type": "function",
 		"function": map[string]interface{}{
 			"name":        "write_markdown",
-			"description": "Create a new markdown (.md) file with the provided content. Use this to create documentation, READMEs, or reports based on information gathered from the codebase. The file must be in an existing directory.",
+			"description": "Create a new markdown (.md) file with the provided content. Use this to create documentation, READMEs, or reports based on information gathered from the codebase. IMPORTANT: By default, write files to the current directory using just the filename (e.g., 'README.md'). Only use a directory path if the user explicitly requests a specific location.",
 			"parameters": map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
 					"path": map[string]interface{}{
 						"type":        "string",
-						"description": "Path where the markdown file should be created (must end with .md and be in an existing directory)",
+						"description": "Filename or path where the markdown file should be created (must end with .md). PREFERRED: Use just a filename (e.g., 'GUIDE.md') to create in current directory. Only include a directory path (e.g., 'docs/GUIDE.md') if user specifically requests it. Directory must exist.",
 					},
 					"content": map[string]interface{}{
 						"type":        "string",

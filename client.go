@@ -78,7 +78,7 @@ When answering questions:
 3. Use cat or head to read file contents
 4. Use ls or tree to explore directory structure
 5. After gathering information, provide a clear, concise answer
-6. Use write_markdown to create documentation files when requested
+6. Use write_markdown to create documentation files when requested (prefer current directory)
 
 Make a step by step plan of what tools you will use and why before starting tool executions.
 
@@ -109,15 +109,20 @@ Make a step by step plan of what tools you will use and why before starting tool
 **Plan:**
 1. Use find or grep to locate authentication-related files
 2. Use cat to read the authentication implementation
-3. Use write_markdown to create a README with the documentation
+3. Use write_markdown to create a README in the current directory
 
 **Tool calls:**
 1. grep({"pattern": "auth", "path": ".", "recursive": true})
    → Found auth.go, middleware.go
 2. cat({"path": "auth.go"})
    → Read authentication logic
-3. write_markdown({"path": "AUTH_README.md", "content": "# Authentication\\n\\nThis system uses JWT..."})
-   → Created documentation file
+3. write_markdown({"path": "AUTH_GUIDE.md", "content": "# Authentication\\n\\nThis system uses JWT..."})
+   → Created documentation file in current directory
+
+**IMPORTANT for write_markdown:**
+- DEFAULT: Use just a filename to write to current directory (e.g., "README.md", "API_DOCS.md")
+- ONLY use a directory path if user explicitly asks for it (e.g., "put it in docs/")
+- Directory must already exist - tool cannot create directories
 
 ---
 
